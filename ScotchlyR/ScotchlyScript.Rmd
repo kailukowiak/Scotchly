@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Libraries
 
 ```{r}
-library(sparklyr)
 
 library(dplyr)
 
@@ -22,7 +21,7 @@ library(tidyr)
 ## Loading data
 
 ```{r}
-scotchImport <- read.table("/Users/kailukowiak/Scotchly/scotch.csv", header = F, sep = ",")
+scotchImport <- read.table("/Users/kailukowiak/Scotchly/scotch.csv", header = F, sep = ",", stringsAsFactors = FALSE)
 
 ```
 
@@ -35,25 +34,108 @@ We need to remove the last two rows
 
 ```{r}
 scotch1 <- scotchImport[1:110, ]
-tail(scotch1)
-
+scotch1$V2 <- NULL
+scotch1[1,1] <- "Category"
 ```
 
 ```{r}
+scotch <- scotch1
 scotch2 <- scotch1[1:2,] 
-scotch2[1,1] <- "Category"
-scotchNames <- t(scotch2) 
-scotchNames <- scotchNames[-c(1:2),] 
-scotchNames <- tbl_df(scotchNames)
-scotchNames <- rename(scotchNames, categ = "1", colorcol = "2")
-scotchNames <- unite(scotchNames, name1, c("categ", "colorcol"), sep = "_", remove = TRUE)
-scotchNames <- scotchNames[c(2:nrow(scotchNames)),]
-scotchNames <- rbind(c("Name"), scotchNames)
-colnames(scotch1) = scotchNames$name1
-scotch <- scotch1[-c(1:2),]
-head(scotch)
+
+scotchNames <- scotch2 %>% 
+  t() %>% 
+  tbl_df() %>% 
+  rename(categ = "1", colorcol = "2") %>% 
+  unite(name1, c("categ", "colorcol"), sep = "_", remove = TRUE)
+  
+colnames(scotch) = scotchNames$name1
+scotch <- scotch[-c(1:2),]
 ```
 
 That was a lot of ugly code. If I have time before the presentation I'll tidy it up.
 
-Now to create a 
+
+Further tidying to remove non numeric data. (Factor data can be ignored because it is in dummy variable form.) 
+```{r}
+library(FNN)
+scotch$`_DISTRICT` <- NULL
+scotch$`_REGION` <- NULL
+df = as.data.frame(sapply(scotch, as.numeric))
+df$Category_NAME <- NULL
+
+```
+
+
+Now to create a function to find euclidean distance. 
+
+```{r}
+knnx.index(df[-1,], df[1, , drop = F], k = 10)
+```
+
+```{r}
+n = "NULL"
+readScotch <- function()
+{ 
+  print(scotch$Category_NAME) # IMport name
+  dfN = filter(df, color_wyne == 2)
+  while(n != "Done"){
+    n = readline(prompt = "Enter your favorite scotch from the above list ('Done' to exit): ") # Get promt
+    scotch_dex = filter(scotch, Category_NAME == n) 
+    scotch_dex = scotch_dex[, -1] #remove the name column to compare with KNN
+    scotch_dex = as.numeric(scotch_dex) # Necessary to remove sting types.
+    dfN = rbind(dfN, scotch_dex) # Add a row to the dataframe. Need the row vector, not DF
+  }
+  dfN = drop_na(dfN)
+  avgN = dfN %>% colMeans()
+  avgN <- as.data.frame(avgN) %>% t() %>% as.data.frame()
+  colnames(avgN) <- colnames(dfN)
+  print(dfN)
+  print(avgN)
+  print(ncol(avgN))
+  print(ncol(df))
+  #df <- rbind(df, avgN)
+  # ncol(scotch_dex) == ncol(df) # Prob unessary. 
+  x <- knnx.index(data.matrix(df), data.matrix(avgN), k = 4)
+  x <- x[1,1]
+  
+}
+```
+
+
+Now we need a function to return a vector
+
+```{r}
+
+print(scotch$Category_NAME) # IMport name
+dfN = filter(df, color_wyne == 2)
+  while(n != "Done"){
+    n = readline(prompt = "Enter your favorite scotch from the above list ('Done' to exit): ") # Get promt
+    scotch_dex = filter(scotch, Category_NAME == n) 
+    scotch_dex = scotch_dex[, -1] #remove the name column to compare with KNN
+    scotch_dex = as.numeric(scotch_dex) # Necessary to remove sting types.
+    dfN = rbind(dfN, scotch_dex) # Add a row to the dataframe. Need the row vector, not DF
+  }
+  avgN = dfN %>% colMeans()
+  
+  # ncol(scotch_dex) == ncol(df) # Prob unessary. 
+  #knnx.index(df, avgN, k = 4)
+
+  
+```
+
+
+
+
+
+
+```{r}
+scotch_test <- scotch[,-1]
+identical(df[1,], filter(scotch_test[1,]))
+```
+
+
+
+
+
+
+
