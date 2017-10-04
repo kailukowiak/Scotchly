@@ -1,46 +1,35 @@
-
- 
+#Load Libraries:
 
 library(dplyr)
-
 library(tidyr)
   
 
 ## Loading data
-
- 
-scotchImport <- read.table("/Users/kailukowiak/Scotchly/scotch.csv", header = F, sep = ",", stringsAsFactors = FALSE)
-
-  
-
- 
+scotchImport <- read.table("/Users/kailukowiak/Scotchly/scotch.csv", 
+                           header = F, sep = ",", stringsAsFactors = FALSE)
 head(scotchImport)
 tail(scotchImport)
   
 
 #We need to remove the last two rows
-
- 
 scotch1 <- scotchImport[1:110, ]
 scotch1$V2 <- NULL
 scotch1[1,1] <- "Category"
-  
-
- 
+# And get the names of the categories to concatinate
 scotch <- scotch1
 scotch2 <- scotch1[1:2,] 
 
+#Naming the columns:
 scotchNames <- scotch2 %>% 
-  t() %>% 
-  tbl_df() %>% 
-  rename(categ = "1", colorcol = "2") %>% 
+  t() %>% # Transpose to get to proper dimentions. 
+  tbl_df() %>% #Make into a dataframe again.
+  rename(categ = "1", colorcol = "2") %>% #name column 1 for convenciance. 
   unite(name1, c("categ", "colorcol"), sep = "_", remove = TRUE)
 
 colnames(scotch) = scotchNames$name1
 scotch <- scotch[-c(1:2),]
-  
-
-#That was a lot of ugly code. If I have time before the presentation I'll tidy it up.
+# The above process may seem like a lot of work but the goal is to be able to do other
+# Interpretations later on, so column names will be important.
 
 
 #Further tidying to remove non numeric data. (Factor data can be ignored because it is in dummy variable form.) 
@@ -49,7 +38,7 @@ library(FNN)
 scotch$`_DISTRICT` <- NULL
 scotch$`_REGION` <- NULL
 df = as.data.frame(sapply(scotch, as.numeric))
-df$Category_NAME <- NULL
+df$Category_NAME <- NULL # Removes null for names.
 
 
 #Now to create a function to find euclidean distance. 
