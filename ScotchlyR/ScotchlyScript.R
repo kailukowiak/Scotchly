@@ -46,12 +46,12 @@ df$Category_NAME <- NULL # Removes null for names.
 n = "NULL"
 readScotch <- function()
   { 
-  print(scotch$Category_NAME) # IMport name
-  dfN = filter(df, color_wyne == 2)
+  print(scotch$Category_NAME) # Import names to choose from.
+  dfN = filter(df, color_wyne == 2) # Remove any non na Data. (Don't ask it works)
   while(n != "Done"){
     n = readline(prompt = "Enter your favorite scotch from the above list ('Done' to exit): ") # Get promt
     scotch_dex = filter(scotch, Category_NAME == n) 
-    scotch_dex = scotch_dex[, -1] #remove the name column to compare with KNN
+    scotch_dex = scotch_dex[, -1] #remove the name column to compare in the KNN
     scotch_dex = as.numeric(scotch_dex) # Necessary to remove sting types.
     dfN = rbind(dfN, scotch_dex) # Add a row to the dataframe. Need the row vector, not DF
   }
