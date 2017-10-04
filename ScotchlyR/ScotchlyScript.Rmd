@@ -1,0 +1,59 @@
+---
+title: "ScotchlyMD"
+author: "Kai Lukowiak"
+date: '2017-10-03'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+
+```{r}
+library(sparklyr)
+
+library(dplyr)
+
+library(tidyr)
+```
+
+## Loading data
+
+```{r}
+scotchImport <- read.table("/Users/kailukowiak/Scotchly/scotch.csv", header = F, sep = ",")
+
+```
+
+```{r}
+head(scotchImport)
+tail(scotchImport)
+```
+
+We need to remove the last two rows
+
+```{r}
+scotch1 <- scotchImport[1:110, ]
+tail(scotch1)
+
+```
+
+```{r}
+scotch2 <- scotch1[1:2,] 
+scotch2[1,1] <- "Category"
+scotchNames <- t(scotch2) 
+scotchNames <- scotchNames[-c(1:2),] 
+scotchNames <- tbl_df(scotchNames)
+scotchNames <- rename(scotchNames, categ = "1", colorcol = "2")
+scotchNames <- unite(scotchNames, name1, c("categ", "colorcol"), sep = "_", remove = TRUE)
+scotchNames <- scotchNames[c(2:nrow(scotchNames)),]
+scotchNames <- rbind(c("Name"), scotchNames)
+colnames(scotch1) = scotchNames$name1
+scotch <- scotch1[-c(1:2),]
+head(scotch)
+```
+
+That was a lot of ugly code. If I have time before the presentation I'll tidy it up.
+
+Now to create a 
